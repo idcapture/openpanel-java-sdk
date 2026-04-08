@@ -1,0 +1,267 @@
+package dev.openpanel;
+
+import dev.openpanel.internal.HttpTracker;
+import dev.openpanel.model.AssignGroupPayload;
+import dev.openpanel.model.DecrementPayload;
+import dev.openpanel.model.GroupPayload;
+import dev.openpanel.model.IdentifyPayload;
+import dev.openpanel.model.IncrementPayload;
+import dev.openpanel.model.TrackPayload;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * Main entry point for the OpenPanel Java SDK.
+ *
+ * <p>Create an instance via the builder, then call tracking methods:
+ * <pre>{@code
+ * OpenPanel op = OpenPanel.builder()
+ *     .clientId("YOUR_CLIENT_ID")
+ *     .clientSecret("YOUR_CLIENT_SECRET")
+ *     .build();
+ *
+ * // Fire-and-forget
+ * op.track("button_clicked", Map.of("button_id", "submit"));
+ *
+ * // With callback on error
+ * op.track("purchase", Map.of("amount", 99.99))
+ *   .exceptionally(e -> { logger.error("Tracking failed", e); return null; });
+ *
+ * // Shutdown when done (e.g. on app stop)
+ * op.close();
+ * }</pre>
+ *
+ * <p>All methods are async and return a {@link CompletableFuture}. You can safely
+ * ignore the future (fire-and-forget) or chain callbacks on it.
+ *
+ * <p>This class is thread-safe.
+ */
+public final class OpenPanel implements AutoCloseable {
+
+    private final OpenPanelOptions options;
+    private final HttpTracker tracker;
+    private final Map<String, Object> globalProperties;
+
+    private OpenPanel(OpenPanelOptions options) {
+        this.options = options;
+        this.tracker = new HttpTracker(options);
+        this.globalProperties = new ConcurrentHashMap<>();
+    }
+
+    // -------------------------------------------------------------------------
+    // Builder
+    // -------------------------------------------------------------------------
+
+    /**
+     * Returns a new builder backed by {@link OpenPanelOptions.Builder}.
+     */
+    public static OpenPanelOptions.Builder builder() {
+        return OpenPanelOptions.builder();
+    }
+
+    /**
+     * Creates an {@link OpenPanel} instance from the given options.
+     */
+    public static OpenPanel create(OpenPanelOptions options) {
+        return new OpenPanel(options);
+    }
+
+    // -------------------------------------------------------------------------
+    // Global properties
+    // -------------------------------------------------------------------------
+
+    /**
+     * Sets properties that are automatically merged into every {@link #track} call.
+     * Calling this method again replaces all existing global properties.
+     */
+    public void setGlobalProperties(Map<String, Object> properties) {
+        globalProperties.clear();
+        if (properties != null) {
+            globalProperties.putAll(properties);
+        }
+    }
+
+    /**
+     * Returns an unmodifiable view of the current global properties.
+     */
+    public Map<String, Object> getGlobalProperties() {
+        return Collections.unmodifiableMap(globalProperties);
+    }
+
+    // -------------------------------------------------------------------------
+    // track
+    // -------------------------------------------------------------------------
+
+    /**
+     * Tracks an event with no additional properties.
+     */
+    public CompletableFuture<Void> track(String eventName) {
+        return track(eventName, null, null, null);
+    }
+
+    /**
+     * Tracks an event with custom properties.
+     */
+    public CompletableFuture<Void> track(String eventName, Map<String, Object> properties) {
+        return track(eventName, properties, null, null);
+    }
+
+    /**
+     * Tracks an event associated with a specific user.
+     */
+    public CompletableFuture<Void> track(String eventName, Map<String, Object> properties, String profileId) {
+        return track(eventName, properties, profileId, null);
+    }
+
+    /**
+     * Tracks an event associated with a user and one or more groups.
+     *
+     * <p>Note: groups are <strong>not</strong> populated automatically even if the profile
+     * has been assigned via {@link #assignGroup}. Pass them explicitly on each call.
+     */
+    public CompletableFuture<Void> track(String eventName, Map<String, Object> properties,
+                                         String profileId, List<String> groups) {
+        if (isFiltered(eventName)) {
+            return CompletableFuture.completedFuture(null);
+        }
+
+        Map<String, Object> merged = mergeWithGlobal(properties);
+        TrackPayload payload = new TrackPayload(eventName, merged, profileId, groups);
+        return send("track", payload);
+    }
+
+    // -------------------------------------------------------------------------
+    // identify
+    // -------------------------------------------------------------------------
+
+    /**
+     * Identifies a user with optional custom properties.
+     */
+    public CompletableFuture<Void> identify(String profileId, Map<String, Object> properties) {
+        return identify(profileId, null, null, null, properties);
+    }
+
+    /**
+     * Identifies a user with standard profile fields and optional custom properties.
+     */
+    public CompletableFuture<Void> identify(String profileId, String firstName, String lastName,
+                                            String email, Map<String, Object> properties) {
+        if (isDisabled()) {
+            return CompletableFuture.completedFuture(null);
+        }
+        IdentifyPayload payload = new IdentifyPayload(profileId, firstName, lastName, email, properties);
+        return send("identify", payload);
+    }
+
+    // -------------------------------------------------------------------------
+    // increment / decrement
+    // -------------------------------------------------------------------------
+
+    /**
+     * Increments a numeric property on a user profile.
+     */
+    public CompletableFuture<Void> increment(String profileId, String property, Number value) {
+        if (isDisabled()) {
+            return CompletableFuture.completedFuture(null);
+        }
+        return send("increment", new IncrementPayload(profileId, property, value));
+    }
+
+    /**
+     * Decrements a numeric property on a user profile.
+     */
+    public CompletableFuture<Void> decrement(String profileId, String property, Number value) {
+        if (isDisabled()) {
+            return CompletableFuture.completedFuture(null);
+        }
+        return send("decrement", new DecrementPayload(profileId, property, value));
+    }
+
+    // -------------------------------------------------------------------------
+    // group / assign_group
+    // -------------------------------------------------------------------------
+
+    /**
+     * Creates or updates a group (e.g. a company, workspace, or team).
+     */
+    public CompletableFuture<Void> group(String groupId, String type, String name,
+                                         Map<String, Object> properties) {
+        if (isDisabled()) {
+            return CompletableFuture.completedFuture(null);
+        }
+        return send("group", new GroupPayload(groupId, type, name, properties));
+    }
+
+    /**
+     * Assigns a user profile to one or more groups.
+     *
+     * <p>This updates the profile record. You still need to pass {@code groups} explicitly
+     * on each {@link #track} call — they are not attached automatically.
+     */
+    public CompletableFuture<Void> assignGroup(String profileId, List<String> groupIds) {
+        if (isDisabled()) {
+            return CompletableFuture.completedFuture(null);
+        }
+        return send("assign_group", new AssignGroupPayload(profileId, groupIds));
+    }
+
+    // -------------------------------------------------------------------------
+    // Lifecycle
+    // -------------------------------------------------------------------------
+
+    /**
+     * Shuts down the underlying HTTP client. Call this when the SDK is no longer needed
+     * (e.g. on application shutdown) to release threads and connections cleanly.
+     *
+     * <p>Implements {@link AutoCloseable} so it works with try-with-resources.
+     */
+    @Override
+    public void close() {
+        tracker.shutdown();
+    }
+
+    // -------------------------------------------------------------------------
+    // Internal helpers
+    // -------------------------------------------------------------------------
+
+    private CompletableFuture<Void> send(String type, Object payload) {
+        if (isDisabled()) {
+            return CompletableFuture.completedFuture(null);
+        }
+        return tracker.send(type, payload);
+    }
+
+    private boolean isDisabled() {
+        return options.isDisabled();
+    }
+
+    private boolean isFiltered(String eventName) {
+        if (isDisabled()) {
+            return true;
+        }
+        if (options.getFilter() != null) {
+            return !options.getFilter().test(eventName);
+        }
+        return false;
+    }
+
+    /**
+     * Merges caller-supplied properties with global properties.
+     * Caller properties take precedence over global ones.
+     */
+    private Map<String, Object> mergeWithGlobal(Map<String, Object> properties) {
+        if (globalProperties.isEmpty()) {
+            return properties;
+        }
+        Map<String, Object> merged = new HashMap<>(globalProperties);
+        if (properties != null) {
+            merged.putAll(properties);
+        }
+        return merged;
+    }
+}
