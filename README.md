@@ -212,4 +212,4 @@ op.track("checkout", mapOf("amount" to 49.99, "coupon" to null))
 
 ## License
 
-[AGPL-3.0](LICENSE.md)
+[AGPL-3.0](LICENSE)
