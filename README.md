@@ -178,12 +178,21 @@ op.track("event")
   });
 ```
 
+## Kotlin Interop
+
+All property maps use JetBrains `@Nullable` type-use annotations (`Map<String, @Nullable Object>`), so Kotlin sees `Map<String, Any?>` natively — no `@Suppress("UNCHECKED_CAST")` needed.
+
+```kotlin
+op.track("checkout", mapOf("amount" to 49.99, "coupon" to null))
+```
+
 ## Dependencies
 
 | Dependency | Version | Scope |
 |---|---|---|
 | `com.squareup.okhttp3:okhttp` | 4.12.0 | compile |
 | `com.fasterxml.jackson.core:jackson-databind` | 2.17.x | compile |
+| `org.jetbrains:annotations` | 24.1.0 | compile |
 | `org.junit.jupiter:junit-jupiter` | 5.10.x | test |
 | `com.squareup.okhttp3:mockwebserver` | 4.12.0 | test |
 
@@ -196,6 +205,7 @@ op.track("event")
 | Device/screen info | Auto-collected | N/A |
 | App lifecycle | Auto-tracked | N/A |
 | Async | Coroutines | `CompletableFuture` |
+| Nullable map values | N/A | `@Nullable` type-use annotations |
 | Maven artifact | `dev.openpanel:openpanel` | `dev.openpanel:openpanel-java` |
 
 ## License
