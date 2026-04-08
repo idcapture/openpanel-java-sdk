@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-Java SDK for [OpenPanel Analytics](https://openpanel.dev) — server-side event tracking for JVM backends (Java 11+). Not yet published to Maven Central.
+Java SDK for [OpenPanel Analytics](https://openpanel.dev) — server-side event tracking for JVM backends (Java 11+). Published on Maven Central as `fr.idcapture:openpanel-java`.
 
 ## Build & Test Commands
 
@@ -15,6 +15,7 @@ mvn test -Dtest=OpenPanelTest              # Run a single test class
 mvn test -Dtest=OpenPanelTest#options_defaults  # Run a single test method
 mvn package              # Build JAR (includes tests)
 mvn install              # Install to local Maven repo
+mvn clean deploy -Prelease  # Publish to Maven Central (requires GPG + Central Portal token)
 ```
 
 ## Architecture

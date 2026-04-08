@@ -1,5 +1,9 @@
 # OpenPanel Java SDK
 
+[![Maven Central](https://img.shields.io/maven-central/v/fr.idcapture/openpanel-java)](https://central.sonatype.com/artifact/fr.idcapture/openpanel-java)
+[![Javadoc](https://javadoc.io/badge2/fr.idcapture/openpanel-java/javadoc.svg)](https://javadoc.io/doc/fr.idcapture/openpanel-java)
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+
 Java SDK for [OpenPanel Analytics](https://openpanel.dev) — server-side tracking for JVM backends.
 
 This SDK targets **Java 11+** and is designed for backend applications (Spring Boot, Quarkus, Micronaut, plain Java, etc.).
@@ -8,11 +12,9 @@ This SDK targets **Java 11+** and is designed for backend applications (Spring B
 
 ## Installation
 
-> Not yet published to Maven Central. Build from source with `mvn install`.
-
 ```xml
 <dependency>
-    <groupId>dev.openpanel</groupId>
+    <groupId>fr.idcapture</groupId>
     <artifactId>openpanel-java</artifactId>
     <version>0.1.0</version>
 </dependency>
@@ -206,7 +208,7 @@ op.track("checkout", mapOf("amount" to 49.99, "coupon" to null))
 | App lifecycle | Auto-tracked | N/A |
 | Async | Coroutines | `CompletableFuture` |
 | Nullable map values | N/A | `@Nullable` type-use annotations |
-| Maven artifact | `dev.openpanel:openpanel` | `dev.openpanel:openpanel-java` |
+| Maven artifact | `dev.openpanel:openpanel` | `fr.idcapture:openpanel-java` |
 
 ## License
 
