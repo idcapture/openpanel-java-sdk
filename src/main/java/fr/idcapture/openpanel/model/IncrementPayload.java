@@ -1,15 +1,15 @@
-package dev.openpanel.model;
+package fr.idcapture.openpanel.model;
 
 /**
- * Payload for a "decrement" call.
+ * Payload for an "increment" call.
  */
-public class DecrementPayload {
+public class IncrementPayload {
 
     private final String profileId;
     private final String property;
     private final Number value;
 
-    public DecrementPayload(String profileId, String property, Number value) {
+    public IncrementPayload(String profileId, String property, Number value) {
         if (profileId == null || profileId.isEmpty()) {
             throw new IllegalArgumentException("profileId must not be null or empty");
         }

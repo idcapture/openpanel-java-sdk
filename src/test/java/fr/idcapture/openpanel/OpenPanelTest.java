@@ -1,4 +1,4 @@
-package dev.openpanel;
+package fr.idcapture.openpanel;
 
 import org.junit.jupiter.api.Test;
 
@@ -190,53 +190,53 @@ class OpenPanelTest {
     @Test
     void trackPayload_requiresEventName() {
         assertThrows(IllegalArgumentException.class, () ->
-                new dev.openpanel.model.TrackPayload(null, null)
+                new fr.idcapture.openpanel.model.TrackPayload(null, null)
         );
         assertThrows(IllegalArgumentException.class, () ->
-                new dev.openpanel.model.TrackPayload("", null)
+                new fr.idcapture.openpanel.model.TrackPayload("", null)
         );
     }
 
     @Test
     void identifyPayload_requiresProfileId() {
         assertThrows(IllegalArgumentException.class, () ->
-                new dev.openpanel.model.IdentifyPayload(null, null)
+                new fr.idcapture.openpanel.model.IdentifyPayload(null, null)
         );
     }
 
     @Test
     void incrementPayload_requiresAllFields() {
         assertThrows(IllegalArgumentException.class, () ->
-                new dev.openpanel.model.IncrementPayload(null, "prop", 1)
+                new fr.idcapture.openpanel.model.IncrementPayload(null, "prop", 1)
         );
         assertThrows(IllegalArgumentException.class, () ->
-                new dev.openpanel.model.IncrementPayload("user1", null, 1)
+                new fr.idcapture.openpanel.model.IncrementPayload("user1", null, 1)
         );
         assertThrows(IllegalArgumentException.class, () ->
-                new dev.openpanel.model.IncrementPayload("user1", "prop", null)
+                new fr.idcapture.openpanel.model.IncrementPayload("user1", "prop", null)
         );
     }
 
     @Test
     void groupPayload_requiresAllFields() {
         assertThrows(IllegalArgumentException.class, () ->
-                new dev.openpanel.model.GroupPayload(null, "company", "Acme", null)
+                new fr.idcapture.openpanel.model.GroupPayload(null, "company", "Acme", null)
         );
         assertThrows(IllegalArgumentException.class, () ->
-                new dev.openpanel.model.GroupPayload("g1", null, "Acme", null)
+                new fr.idcapture.openpanel.model.GroupPayload("g1", null, "Acme", null)
         );
         assertThrows(IllegalArgumentException.class, () ->
-                new dev.openpanel.model.GroupPayload("g1", "company", null, null)
+                new fr.idcapture.openpanel.model.GroupPayload("g1", "company", null, null)
         );
     }
 
     @Test
     void assignGroupPayload_requiresGroupIds() {
         assertThrows(IllegalArgumentException.class, () ->
-                new dev.openpanel.model.AssignGroupPayload("user1", null)
+                new fr.idcapture.openpanel.model.AssignGroupPayload("user1", null)
         );
         assertThrows(IllegalArgumentException.class, () ->
-                new dev.openpanel.model.AssignGroupPayload("user1", List.of())
+                new fr.idcapture.openpanel.model.AssignGroupPayload("user1", List.of())
         );
     }
 

@@ -1,4 +1,4 @@
-package dev.openpanel.model;
+package fr.idcapture.openpanel.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.jetbrains.annotations.Nullable;

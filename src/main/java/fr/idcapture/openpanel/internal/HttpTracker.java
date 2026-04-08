@@ -1,8 +1,8 @@
-package dev.openpanel.internal;
+package fr.idcapture.openpanel.internal;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.openpanel.OpenPanelOptions;
+import fr.idcapture.openpanel.OpenPanelOptions;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;

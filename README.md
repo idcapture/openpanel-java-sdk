@@ -23,8 +23,8 @@ This SDK targets **Java 11+** and is designed for backend applications (Spring B
 ## Quick Start
 
 ```java
-import dev.openpanel.OpenPanel;
-import dev.openpanel.OpenPanelOptions;
+import fr.idcapture.openpanel.OpenPanel;
+import fr.idcapture.openpanel.OpenPanelOptions;
 
 OpenPanel op = OpenPanel.create(
     OpenPanelOptions.builder()

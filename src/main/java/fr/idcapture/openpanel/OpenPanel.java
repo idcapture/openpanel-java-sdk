@@ -1,12 +1,12 @@
-package dev.openpanel;
+package fr.idcapture.openpanel;
 
-import dev.openpanel.internal.HttpTracker;
-import dev.openpanel.model.AssignGroupPayload;
-import dev.openpanel.model.DecrementPayload;
-import dev.openpanel.model.GroupPayload;
-import dev.openpanel.model.IdentifyPayload;
-import dev.openpanel.model.IncrementPayload;
-import dev.openpanel.model.TrackPayload;
+import fr.idcapture.openpanel.internal.HttpTracker;
+import fr.idcapture.openpanel.model.AssignGroupPayload;
+import fr.idcapture.openpanel.model.DecrementPayload;
+import fr.idcapture.openpanel.model.GroupPayload;
+import fr.idcapture.openpanel.model.IdentifyPayload;
+import fr.idcapture.openpanel.model.IncrementPayload;
+import fr.idcapture.openpanel.model.TrackPayload;
 
 import org.jetbrains.annotations.Nullable;
 

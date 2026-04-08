@@ -1,4 +1,4 @@
-package dev.openpanel;
+package fr.idcapture.openpanel;
 
 import java.util.function.Predicate;
 

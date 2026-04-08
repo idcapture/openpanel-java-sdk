@@ -1,13 +1,13 @@
-package dev.openpanel;
+package fr.idcapture.openpanel;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.openpanel.internal.HttpTracker;
-import dev.openpanel.model.AssignGroupPayload;
-import dev.openpanel.model.GroupPayload;
-import dev.openpanel.model.IdentifyPayload;
-import dev.openpanel.model.IncrementPayload;
-import dev.openpanel.model.TrackPayload;
+import fr.idcapture.openpanel.internal.HttpTracker;
+import fr.idcapture.openpanel.model.AssignGroupPayload;
+import fr.idcapture.openpanel.model.GroupPayload;
+import fr.idcapture.openpanel.model.IdentifyPayload;
+import fr.idcapture.openpanel.model.IncrementPayload;
+import fr.idcapture.openpanel.model.TrackPayload;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -198,7 +198,7 @@ class HttpTrackerTest {
     void decrement_bodyCorrect() throws Exception {
         server.enqueue(new MockResponse().setResponseCode(200));
 
-        tracker.send("decrement", new dev.openpanel.model.DecrementPayload("user1", "credits", 5)).get();
+        tracker.send("decrement", new fr.idcapture.openpanel.model.DecrementPayload("user1", "credits", 5)).get();
 
         RecordedRequest req = server.takeRequest();
         JsonNode body = mapper.readTree(req.getBody().readUtf8());

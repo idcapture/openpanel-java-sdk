@@ -29,7 +29,7 @@ All events go through a single HTTP endpoint (`POST /track`) with a `type` discr
 **Internal layer:**
 - `HttpTracker` — async HTTP client (OkHttp). Wraps every payload in `{"type": "...", "payload": {...}}` and POSTs to `{apiUrl}/track`. Returns `CompletableFuture<Void>`. Non-2xx responses throw `OpenPanelApiException`.
 
-**Model layer (`dev.openpanel.model`):**
+**Model layer (`fr.idcapture.openpanel.model`):**
 - Immutable payload POJOs: `TrackPayload`, `IdentifyPayload`, `IncrementPayload`, `DecrementPayload`, `GroupPayload`, `AssignGroupPayload`. Each validates required fields in its constructor. Serialized by Jackson (nulls excluded via `@JsonInclude(NON_NULL)`).
 
 **Key behaviors:**
