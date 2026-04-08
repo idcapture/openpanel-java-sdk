@@ -27,6 +27,8 @@ public final class HttpTracker {
 
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
     private static final String TRACK_PATH = "/track";
+    private static final String SDK_NAME = "java";
+    private static final String SDK_VERSION = "0.3.0";
 
     private final OkHttpClient client;
     private final ObjectMapper mapper;
@@ -68,6 +70,8 @@ public final class HttpTracker {
                 .url(options.getApiUrl() + TRACK_PATH)
                 .header("Content-Type", "application/json")
                 .header("openpanel-client-id", options.getClientId())
+                .header("openpanel-sdk-name", SDK_NAME)
+                .header("openpanel-sdk-version", SDK_VERSION)
                 .post(RequestBody.create(json, JSON));
 
         if (options.getClientSecret() != null) {

@@ -6,12 +6,12 @@
 
     <groupId>fr.idcapture</groupId>
     <artifactId>openpanel-java</artifactId>
-    <version>0.1.0</version>
+    <version>0.3.0</version>
     <packaging>jar</packaging>
 
     <name>OpenPanel Java SDK</name>
     <description>Java SDK for OpenPanel Analytics — server-side tracking for JVM backends</description>
-    <url>https://github.com/vcanuel/openpanel-java-sdk</url>
+    <url>https://github.com/idcapture/openpanel-java-sdk</url>
 
     <licenses>
         <license>
@@ -31,9 +31,9 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/vcanuel/openpanel-java-sdk.git</connection>
-        <developerConnection>scm:git:ssh://github.com/vcanuel/openpanel-java-sdk.git</developerConnection>
-        <url>https://github.com/vcanuel/openpanel-java-sdk</url>
+        <connection>scm:git:git://github.com/idcapture/openpanel-java-sdk.git</connection>
+        <developerConnection>scm:git:ssh://github.com/idcapture/openpanel-java-sdk.git</developerConnection>
+        <url>https://github.com/idcapture/openpanel-java-sdk</url>
     </scm>
 
     <properties>

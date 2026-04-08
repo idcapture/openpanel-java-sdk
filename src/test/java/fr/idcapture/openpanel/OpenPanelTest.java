@@ -241,6 +241,40 @@ class OpenPanelTest {
     }
 
     // -------------------------------------------------------------------------
+    // revenue
+    // -------------------------------------------------------------------------
+
+    @Test
+    void revenue_whenDisabled_completesImmediately() throws Exception {
+        OpenPanel op = OpenPanel.create(
+                OpenPanelOptions.builder().clientId("id").disabled(true).build()
+        );
+        assertNull(op.revenue(99.99).get());
+        op.close();
+    }
+
+    // -------------------------------------------------------------------------
+    // identify with avatar
+    // -------------------------------------------------------------------------
+
+    @Test
+    void identifyPayload_withAvatar() {
+        var payload = new fr.idcapture.openpanel.model.IdentifyPayload(
+                "user1", "John", "Doe", "john@test.com",
+                "https://example.com/avatar.png", null
+        );
+        assertEquals("https://example.com/avatar.png", payload.getAvatar());
+    }
+
+    @Test
+    void identifyPayload_withoutAvatar() {
+        var payload = new fr.idcapture.openpanel.model.IdentifyPayload(
+                "user1", "John", "Doe", "john@test.com", null
+        );
+        assertNull(payload.getAvatar());
+    }
+
+    // -------------------------------------------------------------------------
     // AutoCloseable
     // -------------------------------------------------------------------------
 

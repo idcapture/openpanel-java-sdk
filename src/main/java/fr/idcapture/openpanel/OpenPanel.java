@@ -152,10 +152,19 @@ public final class OpenPanel implements AutoCloseable {
      */
     public CompletableFuture<Void> identify(String profileId, @Nullable String firstName, @Nullable String lastName,
                                             @Nullable String email, @Nullable Map<String, @Nullable Object> properties) {
+        return identify(profileId, firstName, lastName, email, null, properties);
+    }
+
+    /**
+     * Identifies a user with standard profile fields, avatar URL, and optional custom properties.
+     */
+    public CompletableFuture<Void> identify(String profileId, @Nullable String firstName, @Nullable String lastName,
+                                            @Nullable String email, @Nullable String avatar,
+                                            @Nullable Map<String, @Nullable Object> properties) {
         if (isDisabled()) {
             return CompletableFuture.completedFuture(null);
         }
-        IdentifyPayload payload = new IdentifyPayload(profileId, firstName, lastName, email, properties);
+        IdentifyPayload payload = new IdentifyPayload(profileId, firstName, lastName, email, avatar, properties);
         return send("identify", payload);
     }
 
@@ -181,6 +190,37 @@ public final class OpenPanel implements AutoCloseable {
             return CompletableFuture.completedFuture(null);
         }
         return send("decrement", new DecrementPayload(profileId, property, value));
+    }
+
+    // -------------------------------------------------------------------------
+    // revenue
+    // -------------------------------------------------------------------------
+
+    /**
+     * Tracks a revenue event. Shorthand for tracking a "revenue" event with a {@code __revenue} property.
+     */
+    public CompletableFuture<Void> revenue(Number amount) {
+        return revenue(amount, null, null);
+    }
+
+    /**
+     * Tracks a revenue event associated with a specific user.
+     */
+    public CompletableFuture<Void> revenue(Number amount, @Nullable String profileId) {
+        return revenue(amount, profileId, null);
+    }
+
+    /**
+     * Tracks a revenue event with additional properties.
+     */
+    public CompletableFuture<Void> revenue(Number amount, @Nullable String profileId,
+                                           @Nullable Map<String, @Nullable Object> properties) {
+        Map<String, @Nullable Object> merged = new HashMap<>();
+        if (properties != null) {
+            merged.putAll(properties);
+        }
+        merged.put("__revenue", amount);
+        return track("revenue", merged, profileId, null);
     }
 
     // -------------------------------------------------------------------------

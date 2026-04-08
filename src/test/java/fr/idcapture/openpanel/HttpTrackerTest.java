@@ -77,6 +77,8 @@ class HttpTrackerTest {
         assertEquals("test-client-id", req.getHeader("openpanel-client-id"));
         assertEquals("test-client-secret", req.getHeader("openpanel-client-secret"));
         assertTrue(req.getHeader("Content-Type").startsWith("application/json"));
+        assertEquals("java", req.getHeader("openpanel-sdk-name"));
+        assertNotNull(req.getHeader("openpanel-sdk-version"));
     }
 
     @Test
@@ -173,6 +175,70 @@ class HttpTrackerTest {
         assertEquals("Doe", payload.get("lastName").asText());
         assertEquals("john@example.com", payload.get("email").asText());
         assertEquals("premium", payload.get("properties").get("tier").asText());
+    }
+
+    @Test
+    void identify_withAvatar() throws Exception {
+        server.enqueue(new MockResponse().setResponseCode(200));
+
+        tracker.send("identify", new IdentifyPayload(
+                "user123", "John", "Doe", "john@example.com",
+                "https://example.com/avatar.png",
+                Map.of("tier", "premium")
+        )).get();
+
+        RecordedRequest req = server.takeRequest();
+        JsonNode payload = mapper.readTree(req.getBody().readUtf8()).get("payload");
+
+        assertEquals("https://example.com/avatar.png", payload.get("avatar").asText());
+    }
+
+    @Test
+    void identify_withoutAvatar_avatarFieldAbsent() throws Exception {
+        server.enqueue(new MockResponse().setResponseCode(200));
+
+        tracker.send("identify", new IdentifyPayload(
+                "user123", "John", "Doe", "john@example.com",
+                Map.of("tier", "premium")
+        )).get();
+
+        RecordedRequest req = server.takeRequest();
+        JsonNode payload = mapper.readTree(req.getBody().readUtf8()).get("payload");
+
+        assertTrue(payload.get("avatar") == null || payload.get("avatar").isNull());
+    }
+
+    // -------------------------------------------------------------------------
+    // revenue
+    // -------------------------------------------------------------------------
+
+    @Test
+    void revenue_sendsRevenueProperty() throws Exception {
+        server.enqueue(new MockResponse().setResponseCode(200));
+
+        openPanel.revenue(99.99, "user123").get();
+
+        RecordedRequest req = server.takeRequest();
+        JsonNode body = mapper.readTree(req.getBody().readUtf8());
+
+        assertEquals("track", body.get("type").asText());
+        assertEquals("revenue", body.get("payload").get("name").asText());
+        assertEquals(99.99, body.get("payload").get("properties").get("__revenue").asDouble(), 0.001);
+        assertEquals("user123", body.get("payload").get("profileId").asText());
+    }
+
+    @Test
+    void revenue_withAdditionalProperties() throws Exception {
+        server.enqueue(new MockResponse().setResponseCode(200));
+
+        openPanel.revenue(50, "user123", Map.of("currency", "EUR")).get();
+
+        RecordedRequest req = server.takeRequest();
+        JsonNode props = mapper.readTree(req.getBody().readUtf8())
+                .get("payload").get("properties");
+
+        assertEquals(50, props.get("__revenue").asInt());
+        assertEquals("EUR", props.get("currency").asText());
     }
 
     // -------------------------------------------------------------------------

@@ -16,10 +16,11 @@ public class IdentifyPayload {
     private final String firstName;
     private final String lastName;
     private final String email;
+    private final String avatar;
     private final Map<String, @Nullable Object> properties;
 
     public IdentifyPayload(String profileId, String firstName, String lastName, String email,
-                           Map<String, @Nullable Object> properties) {
+                           String avatar, Map<String, @Nullable Object> properties) {
         if (profileId == null || profileId.isEmpty()) {
             throw new IllegalArgumentException("profileId must not be null or empty");
         }
@@ -27,11 +28,17 @@ public class IdentifyPayload {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
+        this.avatar = avatar;
         this.properties = properties != null ? Collections.unmodifiableMap(properties) : null;
     }
 
+    public IdentifyPayload(String profileId, String firstName, String lastName, String email,
+                           Map<String, @Nullable Object> properties) {
+        this(profileId, firstName, lastName, email, null, properties);
+    }
+
     public IdentifyPayload(String profileId, Map<String, @Nullable Object> properties) {
-        this(profileId, null, null, null, properties);
+        this(profileId, null, null, null, null, properties);
     }
 
     public String getProfileId() {
@@ -48,6 +55,10 @@ public class IdentifyPayload {
 
     public String getEmail() {
         return email;
+    }
+
+    public String getAvatar() {
+        return avatar;
     }
 
     public Map<String, @Nullable Object> getProperties() {
