@@ -107,6 +107,10 @@ op.identify("user123", Map.of("plan", "enterprise"));
 
 // With standard fields + custom properties
 op.identify("user123", "John", "Doe", "john@example.com", Map.of("tier", "premium"));
+
+// With avatar
+op.identify("user123", "John", "Doe", "john@example.com",
+    "https://example.com/avatar.png", Map.of("tier", "premium"));
 ```
 
 ### Increment / Decrement
@@ -114,6 +118,19 @@ op.identify("user123", "John", "Doe", "john@example.com", Map.of("tier", "premiu
 ```java
 op.increment("user123", "login_count", 1);
 op.decrement("user123", "credits", 5);
+```
+
+### Revenue
+
+```java
+// Simple
+op.revenue(99.99);
+
+// With user
+op.revenue(99.99, "user123");
+
+// With user + extra properties
+op.revenue(49.99, "user123", Map.of("currency", "EUR", "plan", "pro"));
 ```
 
 ### Groups
