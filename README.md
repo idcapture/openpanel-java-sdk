@@ -12,12 +12,26 @@ This SDK targets **Java 11+** and is designed for backend applications (Spring B
 
 ## Installation
 
+### Maven
+
 ```xml
 <dependency>
     <groupId>fr.idcapture</groupId>
     <artifactId>openpanel-java</artifactId>
     <version>0.2.0</version>
 </dependency>
+```
+
+### Gradle (Groovy)
+
+```groovy
+implementation 'fr.idcapture:openpanel-java:0.2.0'
+```
+
+### Gradle (Kotlin DSL)
+
+```kotlin
+implementation("fr.idcapture:openpanel-java:0.2.0")
 ```
 
 ## Quick Start
