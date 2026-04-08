@@ -16,6 +16,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Internal HTTP layer. Not part of the public API.
@@ -25,10 +27,11 @@ import java.util.concurrent.TimeUnit;
  */
 public final class HttpTracker {
 
+    private static final Logger LOG = Logger.getLogger(HttpTracker.class.getName());
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
     private static final String TRACK_PATH = "/track";
     private static final String SDK_NAME = "java";
-    private static final String SDK_VERSION = "0.3.0";
+    private static final String SDK_VERSION = "0.4.0";
 
     private final OkHttpClient client;
     private final ObjectMapper mapper;
@@ -45,15 +48,13 @@ public final class HttpTracker {
     }
 
     /**
-     * Sends a typed event payload asynchronously.
+     * Sends a typed event payload asynchronously with retry on failure.
      *
      * @param type    the event type (track, identify, increment, decrement, group, assign_group)
      * @param payload the payload object (will be serialized to JSON)
      * @return a {@link CompletableFuture} that completes when the request finishes
      */
     public CompletableFuture<Void> send(String type, Object payload) {
-        CompletableFuture<Void> future = new CompletableFuture<>();
-
         Map<String, Object> body = new HashMap<>();
         body.put("type", type);
         body.put("payload", payload);
@@ -62,10 +63,21 @@ public final class HttpTracker {
         try {
             json = mapper.writeValueAsString(body);
         } catch (Exception e) {
+            CompletableFuture<Void> future = new CompletableFuture<>();
             future.completeExceptionally(new IllegalStateException("Failed to serialize payload", e));
             return future;
         }
 
+        if (options.isVerbose()) {
+            LOG.log(Level.INFO, "OpenPanel [{0}] POST {1}{2} — {3}",
+                    new Object[]{type, options.getApiUrl(), TRACK_PATH, json});
+        }
+
+        Request request = buildRequest(json);
+        return executeWithRetry(request, type, 0);
+    }
+
+    private Request buildRequest(String json) {
         Request.Builder requestBuilder = new Request.Builder()
                 .url(options.getApiUrl() + TRACK_PATH)
                 .header("Content-Type", "application/json")
@@ -78,30 +90,80 @@ public final class HttpTracker {
             requestBuilder.header("openpanel-client-secret", options.getClientSecret());
         }
 
-        client.newCall(requestBuilder.build()).enqueue(new Callback() {
+        return requestBuilder.build();
+    }
+
+    private CompletableFuture<Void> executeWithRetry(Request request, String type, int attempt) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+
+        client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                future.completeExceptionally(e);
+                handleFailure(future, request, type, attempt, e);
             }
 
             @Override
             public void onResponse(Call call, Response response) {
                 try (response) {
                     if (response.isSuccessful()) {
+                        if (options.isVerbose()) {
+                            LOG.log(Level.INFO, "OpenPanel [{0}] OK ({1})",
+                                    new Object[]{type, response.code()});
+                        }
                         future.complete(null);
                     } else {
                         String errorBody = response.body() != null ? response.body().string() : "(empty)";
-                        future.completeExceptionally(
-                                new OpenPanelApiException(response.code(), errorBody)
-                        );
+                        OpenPanelApiException ex = new OpenPanelApiException(response.code(), errorBody);
+
+                        if (response.code() >= 500) {
+                            handleFailure(future, request, type, attempt, ex);
+                        } else {
+                            if (options.isVerbose()) {
+                                LOG.log(Level.WARNING, "OpenPanel [{0}] failed: {1}",
+                                        new Object[]{type, ex.getMessage()});
+                            }
+                            future.completeExceptionally(ex);
+                        }
                     }
                 } catch (IOException e) {
-                    future.completeExceptionally(e);
+                    handleFailure(future, request, type, attempt, e);
                 }
             }
         });
 
         return future;
+    }
+
+    private void handleFailure(CompletableFuture<Void> future, Request request,
+                               String type, int attempt, Exception e) {
+        int maxRetries = options.getMaxRetries();
+        if (attempt < maxRetries) {
+            long delay = options.getInitialRetryDelayMs() * (1L << attempt);
+            if (options.isVerbose()) {
+                LOG.log(Level.WARNING, "OpenPanel [{0}] attempt {1}/{2} failed, retrying in {3}ms: {4}",
+                        new Object[]{type, attempt + 1, maxRetries, delay, e.getMessage()});
+            }
+            client.dispatcher().executorService().execute(() -> {
+                try {
+                    Thread.sleep(delay);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    future.completeExceptionally(e);
+                    return;
+                }
+                executeWithRetry(request, type, attempt + 1)
+                        .whenComplete((v, ex) -> {
+                            if (ex != null) future.completeExceptionally(ex);
+                            else future.complete(null);
+                        });
+            });
+        } else {
+            if (options.isVerbose()) {
+                LOG.log(Level.SEVERE, "OpenPanel [{0}] failed after {1} attempts: {2}",
+                        new Object[]{type, maxRetries + 1, e.getMessage()});
+            }
+            future.completeExceptionally(e);
+        }
     }
 
     /**

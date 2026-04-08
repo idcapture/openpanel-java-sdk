@@ -18,20 +18,20 @@ This SDK targets **Java 11+** and is designed for backend applications (Spring B
 <dependency>
     <groupId>fr.idcapture</groupId>
     <artifactId>openpanel-java</artifactId>
-    <version>0.3.0</version>
+    <version>0.4.0</version>
 </dependency>
 ```
 
 ### Gradle (Groovy)
 
 ```groovy
-implementation 'fr.idcapture:openpanel-java:0.3.0'
+implementation 'fr.idcapture:openpanel-java:0.4.0'
 ```
 
 ### Gradle (Kotlin DSL)
 
 ```kotlin
-implementation("fr.idcapture:openpanel-java:0.3.0")
+implementation("fr.idcapture:openpanel-java:0.4.0")
 ```
 
 ## Quick Start
@@ -75,6 +75,9 @@ OpenPanel op = OpenPanel.create(
         .filter(name -> !name.startsWith("debug_")) // optional event filter
         .connectTimeoutSeconds(10)             // optional, default 10
         .readTimeoutSeconds(30)                // optional, default 30
+        .maxRetries(3)                         // optional, default 3 (0 to disable)
+        .initialRetryDelayMs(500)              // optional, default 500ms (doubles each attempt)
+        .verbose(false)                        // optional, set true for debug logging
         .build()
 );
 ```
@@ -211,6 +214,36 @@ op.track("event")
   });
 ```
 
+## Retry
+
+Failed requests (5xx and network errors) are retried automatically with exponential backoff. Defaults: 3 retries, starting at 500ms (500ms → 1s → 2s). Client errors (4xx) are not retried.
+
+```java
+// Customize retry behavior
+OpenPanelOptions.builder()
+    .clientId("id")
+    .maxRetries(5)              // more retries
+    .initialRetryDelayMs(1000)  // start at 1s
+    .build();
+
+// Disable retries entirely
+OpenPanelOptions.builder()
+    .clientId("id")
+    .maxRetries(0)
+    .build();
+```
+
+## Debug Logging
+
+Enable verbose mode to log all HTTP requests and responses via `java.util.logging`:
+
+```java
+OpenPanelOptions.builder()
+    .clientId("id")
+    .verbose(true)
+    .build();
+```
+
 ## Kotlin Interop
 
 All property maps use JetBrains `@Nullable` type-use annotations (`Map<String, @Nullable Object>`), so Kotlin sees `Map<String, Any?>` natively — no `@Suppress("UNCHECKED_CAST")` needed.
@@ -239,6 +272,7 @@ op.track("checkout", mapOf("amount" to 49.99, "coupon" to null))
 | App lifecycle | Auto-tracked | N/A |
 | Async | Coroutines | `CompletableFuture` |
 | Nullable map values | N/A | `@Nullable` type-use annotations |
+| Retry with backoff | Yes (3 retries) | Yes (3 retries, configurable) |
 | Maven artifact | `dev.openpanel:openpanel` | `fr.idcapture:openpanel-java` |
 
 ## License

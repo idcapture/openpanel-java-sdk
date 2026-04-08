@@ -50,6 +50,7 @@ class HttpTrackerTest {
                 .clientId("test-client-id")
                 .clientSecret("test-client-secret")
                 .apiUrl(baseUrl)
+                .initialRetryDelayMs(10)
                 .build();
 
         tracker = new HttpTracker(opts);
@@ -328,14 +329,62 @@ class HttpTrackerTest {
     }
 
     @Test
-    void apiError_5xx_futureFailsWithException() {
-        server.enqueue(new MockResponse().setResponseCode(500).setBody("Internal Server Error"));
+    void apiError_5xx_futureFailsAfterRetries() {
+        // Default is 3 retries = 4 total attempts
+        for (int i = 0; i < 4; i++) {
+            server.enqueue(new MockResponse().setResponseCode(500).setBody("Internal Server Error"));
+        }
 
         CompletableFuture<Void> future = tracker.send("track", new TrackPayload("event", null));
 
         ExecutionException ex = assertThrows(ExecutionException.class, future::get);
         assertInstanceOf(HttpTracker.OpenPanelApiException.class, ex.getCause());
         assertEquals(500, ((HttpTracker.OpenPanelApiException) ex.getCause()).getStatusCode());
+        assertEquals(4, server.getRequestCount());
+    }
+
+    // -------------------------------------------------------------------------
+    // Retry
+    // -------------------------------------------------------------------------
+
+    @Test
+    void retry_succeedsOnSecondAttempt() throws Exception {
+        server.enqueue(new MockResponse().setResponseCode(500).setBody("error"));
+        server.enqueue(new MockResponse().setResponseCode(200));
+
+        tracker.send("track", new TrackPayload("event", null)).get();
+
+        assertEquals(2, server.getRequestCount());
+    }
+
+    @Test
+    void retry_4xx_noRetry() {
+        server.enqueue(new MockResponse().setResponseCode(400).setBody("Bad Request"));
+
+        CompletableFuture<Void> future = tracker.send("track", new TrackPayload("event", null));
+
+        ExecutionException ex = assertThrows(ExecutionException.class, future::get);
+        assertInstanceOf(HttpTracker.OpenPanelApiException.class, ex.getCause());
+        // 4xx should not be retried
+        assertEquals(1, server.getRequestCount());
+    }
+
+    @Test
+    void retry_disabled_failsImmediately() throws Exception {
+        server.enqueue(new MockResponse().setResponseCode(500).setBody("error"));
+
+        OpenPanelOptions noRetryOpts = OpenPanelOptions.builder()
+                .clientId("test-client-id")
+                .apiUrl(server.url("").toString().replaceAll("/$", ""))
+                .maxRetries(0)
+                .build();
+        HttpTracker noRetryTracker = new HttpTracker(noRetryOpts);
+
+        CompletableFuture<Void> future = noRetryTracker.send("track", new TrackPayload("event", null));
+
+        assertThrows(ExecutionException.class, future::get);
+        assertEquals(1, server.getRequestCount());
+        noRetryTracker.shutdown();
     }
 
     // -------------------------------------------------------------------------

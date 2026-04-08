@@ -24,10 +24,10 @@ All events go through a single HTTP endpoint (`POST /track`) with a `type` discr
 
 **Public API layer:**
 - `OpenPanel` — main entry point. Thread-safe facade that delegates to `HttpTracker`. Implements `AutoCloseable`. Created via `OpenPanel.create(options)` or `OpenPanel.builder()`.
-- `OpenPanelOptions` — immutable config (builder pattern). Holds clientId, clientSecret, apiUrl, disabled flag, event filter predicate, timeouts.
+- `OpenPanelOptions` — immutable config (builder pattern). Holds clientId, clientSecret, apiUrl, disabled flag, event filter predicate, timeouts, retry config, verbose flag.
 
 **Internal layer:**
-- `HttpTracker` — async HTTP client (OkHttp). Wraps every payload in `{"type": "...", "payload": {...}}` and POSTs to `{apiUrl}/track`. Returns `CompletableFuture<Void>`. Non-2xx responses throw `OpenPanelApiException`.
+- `HttpTracker` — async HTTP client (OkHttp). Wraps every payload in `{"type": "...", "payload": {...}}` and POSTs to `{apiUrl}/track`. Returns `CompletableFuture<Void>`. Non-2xx responses throw `OpenPanelApiException`. Retries 5xx/network errors with exponential backoff (configurable). Sends `openpanel-sdk-name`/`openpanel-sdk-version` headers.
 
 **Model layer (`fr.idcapture.openpanel.model`):**
 - Immutable payload POJOs: `TrackPayload`, `IdentifyPayload`, `IncrementPayload`, `DecrementPayload`, `GroupPayload`, `AssignGroupPayload`. Each validates required fields in its constructor. Serialized by Jackson (nulls excluded via `@JsonInclude(NON_NULL)`).
@@ -37,6 +37,10 @@ All events go through a single HTTP endpoint (`POST /track`) with a `type` discr
 - `filter` predicate on `track()` only — returns completed future if predicate rejects.
 - Global properties merge into `track()` calls; caller properties win on conflict.
 - Groups are NOT auto-attached to track events — must be passed explicitly each time.
+- `revenue()` is a shorthand that tracks a "revenue" event with a `__revenue` property.
+- `identify()` supports an optional `avatar` URL field.
+- `verbose=true` enables debug logging via `java.util.logging`.
+- Retry: 3 attempts by default (500ms → 1s → 2s), only on 5xx/network errors. 4xx are not retried.
 
 ## Kotlin Interop
 
@@ -52,4 +56,4 @@ All `Map<String, Object>` in the public API use JetBrains `@Nullable` type-use a
 ## Test Structure
 
 - `OpenPanelTest` — unit tests for options builder, disabled mode, filter, global properties, model validation
-- `HttpTrackerTest` — integration tests using MockWebServer to verify HTTP requests (headers, path, JSON body structure, error handling)
+- `HttpTrackerTest` — integration tests using MockWebServer to verify HTTP requests (headers, path, JSON body structure, error handling, retry behavior)

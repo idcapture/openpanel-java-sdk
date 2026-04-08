@@ -44,6 +44,9 @@ class OpenPanelTest {
         assertNull(opts.getFilter());
         assertEquals(10, opts.getConnectTimeoutSeconds());
         assertEquals(30, opts.getReadTimeoutSeconds());
+        assertEquals(3, opts.getMaxRetries());
+        assertEquals(500, opts.getInitialRetryDelayMs());
+        assertFalse(opts.isVerbose());
     }
 
     // -------------------------------------------------------------------------

@@ -24,6 +24,9 @@ public final class OpenPanelOptions {
     private final Predicate<String> filter;
     private final int connectTimeoutSeconds;
     private final int readTimeoutSeconds;
+    private final int maxRetries;
+    private final long initialRetryDelayMs;
+    private final boolean verbose;
 
     private OpenPanelOptions(Builder builder) {
         this.clientId = builder.clientId;
@@ -33,6 +36,9 @@ public final class OpenPanelOptions {
         this.filter = builder.filter;
         this.connectTimeoutSeconds = builder.connectTimeoutSeconds;
         this.readTimeoutSeconds = builder.readTimeoutSeconds;
+        this.maxRetries = builder.maxRetries;
+        this.initialRetryDelayMs = builder.initialRetryDelayMs;
+        this.verbose = builder.verbose;
     }
 
     public String getClientId() {
@@ -67,6 +73,18 @@ public final class OpenPanelOptions {
         return readTimeoutSeconds;
     }
 
+    public int getMaxRetries() {
+        return maxRetries;
+    }
+
+    public long getInitialRetryDelayMs() {
+        return initialRetryDelayMs;
+    }
+
+    public boolean isVerbose() {
+        return verbose;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -80,6 +98,9 @@ public final class OpenPanelOptions {
         private Predicate<String> filter;
         private int connectTimeoutSeconds = 10;
         private int readTimeoutSeconds = 30;
+        private int maxRetries = 3;
+        private long initialRetryDelayMs = 500;
+        private boolean verbose = false;
 
         private Builder() {}
 
@@ -138,6 +159,31 @@ public final class OpenPanelOptions {
          */
         public Builder readTimeoutSeconds(int seconds) {
             this.readTimeoutSeconds = seconds;
+            return this;
+        }
+
+        /**
+         * Max retry attempts on failure. Defaults to 3. Set to 0 to disable retries.
+         */
+        public Builder maxRetries(int maxRetries) {
+            this.maxRetries = maxRetries;
+            return this;
+        }
+
+        /**
+         * Initial delay before first retry in milliseconds. Doubles on each attempt.
+         * Defaults to 500.
+         */
+        public Builder initialRetryDelayMs(long initialRetryDelayMs) {
+            this.initialRetryDelayMs = initialRetryDelayMs;
+            return this;
+        }
+
+        /**
+         * When {@code true}, logs HTTP requests and responses to {@code java.util.logging}.
+         */
+        public Builder verbose(boolean verbose) {
+            this.verbose = verbose;
             return this;
         }
 
