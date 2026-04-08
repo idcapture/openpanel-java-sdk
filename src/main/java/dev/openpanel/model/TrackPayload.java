@@ -1,6 +1,7 @@
 package dev.openpanel.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.List;
@@ -13,11 +14,11 @@ import java.util.Map;
 public class TrackPayload {
 
     private final String name;
-    private final Map<String, Object> properties;
+    private final Map<String, @Nullable Object> properties;
     private final String profileId;
     private final List<String> groups;
 
-    public TrackPayload(String name, Map<String, Object> properties, String profileId, List<String> groups) {
+    public TrackPayload(String name, Map<String, @Nullable Object> properties, String profileId, List<String> groups) {
         if (name == null || name.isEmpty()) {
             throw new IllegalArgumentException("Event name must not be null or empty");
         }
@@ -27,7 +28,7 @@ public class TrackPayload {
         this.groups = groups != null ? Collections.unmodifiableList(groups) : null;
     }
 
-    public TrackPayload(String name, Map<String, Object> properties) {
+    public TrackPayload(String name, Map<String, @Nullable Object> properties) {
         this(name, properties, null, null);
     }
 
@@ -35,7 +36,7 @@ public class TrackPayload {
         return name;
     }
 
-    public Map<String, Object> getProperties() {
+    public Map<String, @Nullable Object> getProperties() {
         return properties;
     }
 

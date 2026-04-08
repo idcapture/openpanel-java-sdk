@@ -1,6 +1,7 @@
 package dev.openpanel.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.Map;
@@ -15,10 +16,10 @@ public class IdentifyPayload {
     private final String firstName;
     private final String lastName;
     private final String email;
-    private final Map<String, Object> properties;
+    private final Map<String, @Nullable Object> properties;
 
     public IdentifyPayload(String profileId, String firstName, String lastName, String email,
-                           Map<String, Object> properties) {
+                           Map<String, @Nullable Object> properties) {
         if (profileId == null || profileId.isEmpty()) {
             throw new IllegalArgumentException("profileId must not be null or empty");
         }
@@ -29,7 +30,7 @@ public class IdentifyPayload {
         this.properties = properties != null ? Collections.unmodifiableMap(properties) : null;
     }
 
-    public IdentifyPayload(String profileId, Map<String, Object> properties) {
+    public IdentifyPayload(String profileId, Map<String, @Nullable Object> properties) {
         this(profileId, null, null, null, properties);
     }
 
@@ -49,7 +50,7 @@ public class IdentifyPayload {
         return email;
     }
 
-    public Map<String, Object> getProperties() {
+    public Map<String, @Nullable Object> getProperties() {
         return properties;
     }
 }

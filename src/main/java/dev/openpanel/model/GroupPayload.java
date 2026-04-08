@@ -1,6 +1,7 @@
 package dev.openpanel.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.Map;
@@ -14,9 +15,9 @@ public class GroupPayload {
     private final String id;
     private final String type;
     private final String name;
-    private final Map<String, Object> properties;
+    private final Map<String, @Nullable Object> properties;
 
-    public GroupPayload(String id, String type, String name, Map<String, Object> properties) {
+    public GroupPayload(String id, String type, String name, Map<String, @Nullable Object> properties) {
         if (id == null || id.isEmpty()) {
             throw new IllegalArgumentException("group id must not be null or empty");
         }
@@ -44,7 +45,7 @@ public class GroupPayload {
         return name;
     }
 
-    public Map<String, Object> getProperties() {
+    public Map<String, @Nullable Object> getProperties() {
         return properties;
     }
 }

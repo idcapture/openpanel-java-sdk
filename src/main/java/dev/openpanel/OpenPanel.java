@@ -8,12 +8,13 @@ import dev.openpanel.model.IdentifyPayload;
 import dev.openpanel.model.IncrementPayload;
 import dev.openpanel.model.TrackPayload;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Main entry point for the OpenPanel Java SDK.
@@ -45,12 +46,11 @@ public final class OpenPanel implements AutoCloseable {
 
     private final OpenPanelOptions options;
     private final HttpTracker tracker;
-    private final Map<String, Object> globalProperties;
+    private volatile Map<String, @Nullable Object> globalProperties = Collections.emptyMap();
 
     private OpenPanel(OpenPanelOptions options) {
         this.options = options;
         this.tracker = new HttpTracker(options);
-        this.globalProperties = new ConcurrentHashMap<>();
     }
 
     // -------------------------------------------------------------------------
@@ -79,18 +79,19 @@ public final class OpenPanel implements AutoCloseable {
      * Sets properties that are automatically merged into every {@link #track} call.
      * Calling this method again replaces all existing global properties.
      */
-    public void setGlobalProperties(Map<String, Object> properties) {
-        globalProperties.clear();
-        if (properties != null) {
-            globalProperties.putAll(properties);
+    public void setGlobalProperties(@Nullable Map<String, @Nullable Object> properties) {
+        if (properties == null || properties.isEmpty()) {
+            this.globalProperties = Collections.emptyMap();
+        } else {
+            this.globalProperties = Collections.unmodifiableMap(new HashMap<>(properties));
         }
     }
 
     /**
      * Returns an unmodifiable view of the current global properties.
      */
-    public Map<String, Object> getGlobalProperties() {
-        return Collections.unmodifiableMap(globalProperties);
+    public Map<String, @Nullable Object> getGlobalProperties() {
+        return globalProperties;
     }
 
     // -------------------------------------------------------------------------
@@ -107,14 +108,14 @@ public final class OpenPanel implements AutoCloseable {
     /**
      * Tracks an event with custom properties.
      */
-    public CompletableFuture<Void> track(String eventName, Map<String, Object> properties) {
+    public CompletableFuture<Void> track(String eventName, @Nullable Map<String, @Nullable Object> properties) {
         return track(eventName, properties, null, null);
     }
 
     /**
      * Tracks an event associated with a specific user.
      */
-    public CompletableFuture<Void> track(String eventName, Map<String, Object> properties, String profileId) {
+    public CompletableFuture<Void> track(String eventName, @Nullable Map<String, @Nullable Object> properties, @Nullable String profileId) {
         return track(eventName, properties, profileId, null);
     }
 
@@ -124,8 +125,8 @@ public final class OpenPanel implements AutoCloseable {
      * <p>Note: groups are <strong>not</strong> populated automatically even if the profile
      * has been assigned via {@link #assignGroup}. Pass them explicitly on each call.
      */
-    public CompletableFuture<Void> track(String eventName, Map<String, Object> properties,
-                                         String profileId, List<String> groups) {
+    public CompletableFuture<Void> track(String eventName, @Nullable Map<String, @Nullable Object> properties,
+                                         @Nullable String profileId, @Nullable List<String> groups) {
         if (isFiltered(eventName)) {
             return CompletableFuture.completedFuture(null);
         }
@@ -142,15 +143,15 @@ public final class OpenPanel implements AutoCloseable {
     /**
      * Identifies a user with optional custom properties.
      */
-    public CompletableFuture<Void> identify(String profileId, Map<String, Object> properties) {
+    public CompletableFuture<Void> identify(String profileId, @Nullable Map<String, @Nullable Object> properties) {
         return identify(profileId, null, null, null, properties);
     }
 
     /**
      * Identifies a user with standard profile fields and optional custom properties.
      */
-    public CompletableFuture<Void> identify(String profileId, String firstName, String lastName,
-                                            String email, Map<String, Object> properties) {
+    public CompletableFuture<Void> identify(String profileId, @Nullable String firstName, @Nullable String lastName,
+                                            @Nullable String email, @Nullable Map<String, @Nullable Object> properties) {
         if (isDisabled()) {
             return CompletableFuture.completedFuture(null);
         }
@@ -190,7 +191,7 @@ public final class OpenPanel implements AutoCloseable {
      * Creates or updates a group (e.g. a company, workspace, or team).
      */
     public CompletableFuture<Void> group(String groupId, String type, String name,
-                                         Map<String, Object> properties) {
+                                         @Nullable Map<String, @Nullable Object> properties) {
         if (isDisabled()) {
             return CompletableFuture.completedFuture(null);
         }
@@ -254,11 +255,12 @@ public final class OpenPanel implements AutoCloseable {
      * Merges caller-supplied properties with global properties.
      * Caller properties take precedence over global ones.
      */
-    private Map<String, Object> mergeWithGlobal(Map<String, Object> properties) {
-        if (globalProperties.isEmpty()) {
+    private @Nullable Map<String, @Nullable Object> mergeWithGlobal(@Nullable Map<String, @Nullable Object> properties) {
+        Map<String, @Nullable Object> global = this.globalProperties;
+        if (global.isEmpty()) {
             return properties;
         }
-        Map<String, Object> merged = new HashMap<>(globalProperties);
+        Map<String, @Nullable Object> merged = new HashMap<>(global);
         if (properties != null) {
             merged.putAll(properties);
         }

@@ -60,6 +60,13 @@
             <version>${jackson.version}</version>
         </dependency>
 
+        <!-- Nullability annotations for Kotlin interop -->
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>24.1.0</version>
+        </dependency>
+
         <!-- Test: JUnit 5 -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -106,6 +113,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>3.7.0</version>
+                <configuration>
+                    <doclint>none</doclint>
+                </configuration>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
