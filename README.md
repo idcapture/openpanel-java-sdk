@@ -16,7 +16,7 @@ This SDK targets **Java 11+** and is designed for backend applications (Spring B
 <dependency>
     <groupId>fr.idcapture</groupId>
     <artifactId>openpanel-java</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
 </dependency>
 ```
 
