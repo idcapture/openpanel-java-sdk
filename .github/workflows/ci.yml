@@ -10,6 +10,8 @@ jobs:
   test:
     name: Test (Java ${{ matrix.java }})
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     strategy:
       matrix:
         java: [ 11, 17, 21 ]
